@@ -37,7 +37,7 @@ export default async function InvitationPage({
 
   if (!invitationId) {
     return (
-      <main className="mx-auto mt-16 max-w-xl rounded-2xl border border-slate-200 bg-white p-6">
+      <main className="mx-auto mt-6 max-w-xl rounded-2xl border border-slate-200 bg-white p-4 sm:mt-16 sm:p-6">
         <h1 className="text-xl font-semibold text-slate-900">Davet Bulunamadi</h1>
         <p className="mt-2 text-sm text-slate-600">
           Link gecersiz veya eksik. Yoneticiye yeni davet gondermesi icin bilgi verin.
@@ -53,7 +53,7 @@ export default async function InvitationPage({
 
   if (!user) {
     return (
-      <main className="mx-auto mt-16 max-w-xl rounded-2xl border border-slate-200 bg-white p-6">
+      <main className="mx-auto mt-6 max-w-xl rounded-2xl border border-slate-200 bg-white p-4 sm:mt-16 sm:p-6">
         <h1 className="text-xl font-semibold text-slate-900">Giris Gerekiyor</h1>
         <p className="mt-2 text-sm text-slate-600">
           Daveti kabul etmek icin once giris yapin.
@@ -76,7 +76,7 @@ export default async function InvitationPage({
 
   if (!invitation) {
     return (
-      <main className="mx-auto mt-16 max-w-xl rounded-2xl border border-slate-200 bg-white p-6">
+      <main className="mx-auto mt-6 max-w-xl rounded-2xl border border-slate-200 bg-white p-4 sm:mt-16 sm:p-6">
         <h1 className="text-xl font-semibold text-slate-900">Davet Erisimi Yok</h1>
         <p className="mt-2 text-sm text-slate-600">
           Bu davet sizin hesabinizla eslesmiyor veya kullanilmis olabilir.
@@ -86,7 +86,7 @@ export default async function InvitationPage({
   }
 
   return (
-    <main className="mx-auto mt-16 max-w-xl rounded-2xl border border-slate-200 bg-white p-6">
+    <main className="mx-auto mt-6 max-w-xl rounded-2xl border border-slate-200 bg-white p-4 sm:mt-16 sm:p-6">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         Daire Daveti
       </p>
@@ -95,21 +95,21 @@ export default async function InvitationPage({
       </h1>
 
       <dl className="mt-4 space-y-2 text-sm text-slate-700">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <dt>E-posta</dt>
-          <dd className="font-medium text-slate-900">{invitation.email}</dd>
+          <dd className="break-all font-medium text-slate-900">{invitation.email}</dd>
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <dt>Tip</dt>
           <dd className="font-medium text-slate-900">
             {occupantTypeLabel(invitation.occupant_type)}
           </dd>
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <dt>Baslangic</dt>
           <dd className="font-medium text-slate-900">{formatDate(invitation.starts_on)}</dd>
         </div>
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <dt>Durum</dt>
           <dd className="font-medium text-slate-900">{invitation.status}</dd>
         </div>

@@ -16,11 +16,11 @@ export default async function LoginPage({
   return (
     <section className="w-full max-w-4xl overflow-hidden rounded-3xl border border-amber-200 bg-white/80 shadow-[0_32px_80px_rgba(15,23,42,0.18)] backdrop-blur">
       <div className="grid md:grid-cols-[1.1fr_1fr]">
-        <div className="bg-slate-950 p-8 text-slate-100 md:p-10">
+        <div className="bg-slate-950 p-5 text-slate-100 sm:p-8 md:p-10">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-300">
             Apartman Defteri
           </p>
-          <h1 className="mt-4 text-3xl font-semibold leading-tight">
+          <h1 className="mt-4 text-2xl font-semibold leading-tight sm:text-3xl">
             Gelir gider takibini tek ekranda yonetin.
           </h1>
           <p className="mt-4 text-sm leading-7 text-slate-300">
@@ -37,7 +37,7 @@ export default async function LoginPage({
           </div>
         </div>
 
-        <div className="p-8 md:p-10">
+        <div className="p-5 sm:p-8 md:p-10">
           <h2 className="text-xl font-semibold text-slate-900">Giris Yap</h2>
           <p className="mt-2 text-sm text-slate-600">
             Hesabiniza giris yaparak kendi panelinizi acin.

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { requireAdmin } from "@/lib/auth";
+import { requireManager } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 import { SubmitButton } from "@/components/submit-button";
 import { formatDate, formatMoney } from "@/lib/utils";
@@ -14,6 +14,8 @@ import {
   deleteExpenseAction,
   deleteExpenseCategoryAction,
   deletePaymentAction,
+  setApartmentDueExemptionAction,
+  setOpeningCarryOverAction,
   updateExpenseAction,
   updateExpenseCategoryAction,
   updatePaymentAction,
@@ -23,6 +25,7 @@ type Apartment = {
   id: string;
   number: number;
   label: string;
+  is_dues_exempt: boolean;
 };
 
 type Period = {
@@ -60,13 +63,17 @@ type ExpenseRow = {
   note: string | null;
 };
 
+type FinanceSettingsRow = {
+  opening_carry_over: number;
+};
+
 export default async function ManagementPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   const params = await searchParams;
-  const { supabase } = await requireAdmin();
+  const { supabase } = await requireManager();
 
   const [
     apartmentsResult,
@@ -74,10 +81,11 @@ export default async function ManagementPage({
     categoriesResult,
     paymentsResult,
     expensesResult,
+    settingsResult,
   ] = await Promise.all([
     supabase
       .from("apartments")
-      .select("id, number, label")
+      .select("id, number, label, is_dues_exempt")
       .order("number", { ascending: true })
       .returns<Apartment[]>(),
     supabase
@@ -102,6 +110,11 @@ export default async function ManagementPage({
       .order("spent_at", { ascending: false })
       .limit(25)
       .returns<ExpenseRow[]>(),
+    supabase
+      .from("finance_settings")
+      .select("opening_carry_over")
+      .eq("id", 1)
+      .maybeSingle<FinanceSettingsRow>(),
   ]);
 
   const apartments = apartmentsResult.data ?? [];
@@ -111,13 +124,14 @@ export default async function ManagementPage({
   const activeCategories = categories.filter((category) => category.active);
   const payments = paymentsResult.data ?? [];
   const expenses = expensesResult.data ?? [];
+  const openingCarryOver = Number(settingsResult.data?.opening_carry_over ?? 0);
 
   return (
     <section>
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
         Yonetim
       </p>
-      <h1 className="text-2xl font-semibold text-slate-900">Yonetici Islemleri</h1>
+      <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">Yonetici Islemleri</h1>
       <p className="mt-2 text-sm text-slate-600">
         Aylik aidat, odeme, gider ve ek gider islemlerini buradan yonetin.
         Kullanici daveti ve kiraci devirleri icin{" "}
@@ -142,7 +156,77 @@ export default async function ManagementPage({
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <h2 className="text-base font-semibold text-slate-900">
-            1) Aylik Aidat Donemi Ac
+            1) Gecen Yildan Devir Bakiye
+          </h2>
+          <p className="mt-1 text-xs text-slate-600">
+            Kasaya gecen donemden devreden tutari bir kez girin.
+          </p>
+          <form action={setOpeningCarryOverAction} className="mt-4 grid gap-3">
+            <label className="space-y-1 text-sm">
+              <span className="font-medium text-slate-700">Devir Tutar</span>
+              <input
+                required
+                type="number"
+                step="0.01"
+                name="openingCarryOver"
+                defaultValue={openingCarryOver}
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+              />
+            </label>
+            <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">
+              Mevcut devir: <span className="font-semibold">{formatMoney(openingCarryOver)}</span>
+            </p>
+            <SubmitButton
+              pendingText="Devir kaydediliyor..."
+              className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
+            >
+              Devri Kaydet
+            </SubmitButton>
+          </form>
+        </article>
+
+        <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <h2 className="text-base font-semibold text-slate-900">
+            2) Aidat Muafiyeti
+          </h2>
+          <p className="mt-1 text-xs text-slate-600">
+            Muaf daireler yeni aylik aidat donemi acildiginda borclandirilmaz.
+          </p>
+          <div className="mt-4 space-y-2">
+            {apartments.map((apartment) => (
+              <form
+                key={`due-exempt-${apartment.id}`}
+                action={setApartmentDueExemptionAction}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2"
+              >
+                <input type="hidden" name="apartmentId" value={apartment.id} />
+                <input
+                  type="hidden"
+                  name="isExempt"
+                  value={apartment.is_dues_exempt ? "false" : "true"}
+                />
+                <p className="text-sm font-medium text-slate-800">
+                  {apartmentDisplayMap.get(apartment.id)?.displayText ??
+                    `${apartment.number}. Daire ${apartment.label}`}
+                </p>
+                <SubmitButton
+                  pendingText="Kaydediliyor..."
+                  className={`h-8 w-full rounded-md border px-3 text-xs font-semibold sm:w-auto ${
+                    apartment.is_dues_exempt
+                      ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                      : "border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {apartment.is_dues_exempt ? "Muafiyeti Kaldir" : "Aidattan Muaf Et"}
+                </SubmitButton>
+              </form>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <h2 className="text-base font-semibold text-slate-900">
+            3) Aylik Aidat Donemi Ac
           </h2>
           <form action={createPeriodAction} className="mt-4 grid gap-3">
             <label className="space-y-1 text-sm">
@@ -185,7 +269,7 @@ export default async function ManagementPage({
         </article>
 
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">2) Odeme Ekle</h2>
+          <h2 className="text-base font-semibold text-slate-900">4) Odeme Ekle</h2>
           <form action={addPaymentAction} className="mt-4 grid gap-3">
             <label className="space-y-1 text-sm">
               <span className="font-medium text-slate-700">Daire</span>
@@ -242,7 +326,7 @@ export default async function ManagementPage({
         </article>
 
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">3) Gider Ekle</h2>
+          <h2 className="text-base font-semibold text-slate-900">5) Gider Ekle</h2>
           <form action={addExpenseAction} className="mt-4 grid gap-3">
             <label className="space-y-1 text-sm">
               <span className="font-medium text-slate-700">Donem (Opsiyonel)</span>
@@ -322,7 +406,7 @@ export default async function ManagementPage({
         </article>
 
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">4) Kategori Yonetimi</h2>
+          <h2 className="text-base font-semibold text-slate-900">6) Kategori Yonetimi</h2>
           <form action={addExpenseCategoryAction} className="mt-4 grid gap-3">
             <label className="space-y-1 text-sm">
               <span className="font-medium text-slate-700">Yeni Kategori</span>
@@ -403,7 +487,7 @@ export default async function ManagementPage({
 
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:col-span-2">
           <h2 className="text-base font-semibold text-slate-900">
-            5) Ekstra Daire Basi Gider
+            7) Ekstra Daire Basi Gider
           </h2>
           <form action={createSpecialAssessmentAction} className="mt-4 grid gap-3 md:grid-cols-2">
             <label className="space-y-1 text-sm md:col-span-2">
@@ -470,7 +554,7 @@ export default async function ManagementPage({
 
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:col-span-2">
           <h2 className="text-base font-semibold text-slate-900">
-            6) Kayitli Odemeler (Duzenle / Sil)
+            8) Kayitli Odemeler (Duzenle / Sil)
           </h2>
           <div className="mt-4 space-y-3">
             {payments.length === 0 ? (
@@ -529,7 +613,7 @@ export default async function ManagementPage({
                     />
                     <SubmitButton
                       pendingText="Guncelleniyor..."
-                      className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                      className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
                     >
                       Guncelle
                     </SubmitButton>
@@ -538,7 +622,7 @@ export default async function ManagementPage({
                     <input type="hidden" name="paymentId" value={payment.id} />
                     <SubmitButton
                       pendingText="Siliniyor..."
-                      className="h-8 rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                      className="h-8 w-full rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 sm:w-auto"
                     >
                       Odemeyi Sil
                     </SubmitButton>
@@ -551,7 +635,7 @@ export default async function ManagementPage({
 
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4 lg:col-span-2">
           <h2 className="text-base font-semibold text-slate-900">
-            7) Kayitli Giderler (Duzenle / Sil)
+            9) Kayitli Giderler (Duzenle / Sil)
           </h2>
           <div className="mt-4 space-y-3">
             {expenses.length === 0 ? (
@@ -627,7 +711,7 @@ export default async function ManagementPage({
                     />
                     <SubmitButton
                       pendingText="Guncelleniyor..."
-                      className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                      className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
                     >
                       Guncelle
                     </SubmitButton>
@@ -636,7 +720,7 @@ export default async function ManagementPage({
                     <input type="hidden" name="expenseId" value={expense.id} />
                     <SubmitButton
                       pendingText="Siliniyor..."
-                      className="h-8 rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                      className="h-8 w-full rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 sm:w-auto"
                     >
                       Gideri Sil
                     </SubmitButton>

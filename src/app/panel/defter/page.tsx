@@ -171,25 +171,25 @@ export default async function LedgerPage({
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
         Aylik Defter
       </p>
-      <h1 className="text-2xl font-semibold text-slate-900">
+      <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">
         {monthLabel(selectedMonthStart)} Gelir Gider
       </h1>
 
       <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <div className="flex flex-wrap items-end gap-3">
-          <form className="flex flex-wrap items-end gap-2">
-            <label className="space-y-1 text-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+          <form className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
+            <label className="w-full space-y-1 text-sm sm:w-auto">
               <span className="font-medium text-slate-700">Ay Secimi</span>
               <input
                 type="month"
                 name="month"
                 defaultValue={selectedMonthValue}
-                className="h-10 rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200 sm:w-auto"
               />
             </label>
             <SubmitButton
               pendingText="Yukleniyor..."
-              className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
+              className="h-10 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700 sm:w-auto"
             >
               Goster
             </SubmitButton>
@@ -197,13 +197,13 @@ export default async function LedgerPage({
 
           <Link
             href={`/panel/defter?month=${prevMonth}`}
-            className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold leading-10 text-slate-700 hover:bg-slate-100"
+            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-4 text-center text-sm font-semibold leading-10 text-slate-700 hover:bg-slate-100 sm:w-auto"
           >
             Onceki Ay
           </Link>
           <Link
             href={`/panel/defter?month=${nextMonth}`}
-            className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold leading-10 text-slate-700 hover:bg-slate-100"
+            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-4 text-center text-sm font-semibold leading-10 text-slate-700 hover:bg-slate-100 sm:w-auto"
           >
             Sonraki Ay
           </Link>
@@ -234,7 +234,7 @@ export default async function LedgerPage({
             Gelir
           </header>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full min-w-[520px] text-sm">
               <thead className="bg-emerald-50 text-emerald-900">
                 <tr>
                   <th className="px-3 py-2 text-left">Apt No</th>
@@ -284,7 +284,7 @@ export default async function LedgerPage({
             Gider
           </header>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
+            <table className="w-full min-w-[520px] text-sm">
               <thead className="bg-rose-50 text-rose-900">
                 <tr>
                   <th className="px-3 py-2 text-left">Kategori</th>

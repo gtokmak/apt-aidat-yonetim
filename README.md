@@ -5,7 +5,7 @@ Bu proje, 7 dairelik apartmanlar icin gelir gider ve aidat takibini yapan bir
 
 ## Ozellikler
 
-- Yonetici ve daire kullanicisi rolleri
+- Admin yonetici, apartman yonetici ve kullanici rolleri
 - E-posta daveti ile kullanici onboarding (genel kayit kapali)
 - Kiraci devir takibi (giris/cikis tarihli gecmis)
 - Daire bazli yetki kontrolu (RLS, aktif oturum bazli)
@@ -14,6 +14,8 @@ Bu proje, 7 dairelik apartmanlar icin gelir gider ve aidat takibini yapan bir
 - Ekstra daire basi gider dagitimi (bahce duzenlemesi vb.)
 - Gider kategorisinden secim + yeni kategori ekleme
 - Kategori / odeme / gider kayitlarinda duzenle-sil islemleri
+- Gecen yildan devreden bakiye (acilis devri) girisi
+- Daire bazli aidat muafiyeti (yonetici daire vb.)
 - Aylik gelir gider defteri ve kasa ozeti
 - Defterde ay secimi ile gecmis donem goruntuleme
 - Daire bazli bakiye takibi (borc / on odeme)
@@ -49,6 +51,8 @@ cp .env.example .env.local
 - `supabase/migrations/20260312010000_invites_turnover_categories.sql`
 - `supabase/migrations/20260312020000_profiles_status_and_phone.sql`
 - `supabase/migrations/20260312110000_resident_full_read.sql`
+- `supabase/migrations/20260312130000_roles_and_carryover.sql`
+- `supabase/migrations/20260312143000_apartment_due_exemption.sql`
 
 Bu migration'lar:
 - Temel tablolari ve RLS politikalari kurar
@@ -67,10 +71,12 @@ Tarayicida [http://localhost:3000](http://localhost:3000) adresini ac.
 ## Kullanim Akisi
 
 1. Ilk kayit olan hesap yonetici olur.
-2. Yonetici `Kullanicilar` sayfasindan daireye e-posta daveti gonderir.
-3. Davet alan kullanici linkten kabul ederek daireye otomatik baglanir.
-4. Kiraci cikinca kayit kapatilir, yeni kiraci icin yeni davet acilir.
-5. Yonetici panelinden aidat, odeme, gider, kategori ve ek giderleri yonetir.
+2. Admin, `Kullanicilar` sayfasindan apartman yoneticisi atayabilir.
+3. Yonetici `Kullanicilar` sayfasindan daireye e-posta daveti gonderir.
+4. Davet alan kullanici linkten kabul ederek daireye otomatik baglanir.
+5. Kiraci cikinca kayit kapatilir, yeni kiraci icin yeni davet acilir.
+6. Yonetici panelinden aidat, odeme, gider, kategori ve ek giderleri yonetir.
+7. `Yonetim` sayfasindan gecen yildan devreden bakiye girilerek kasa hesaplarina dahil edilir.
 
 ## Ucretsiz Yayin
 

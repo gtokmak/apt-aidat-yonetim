@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { signOutAction } from "@/app/(auth)/actions";
 import { SubmitButton } from "@/components/submit-button";
-import { requireAuth } from "@/lib/auth";
+import { requireAuth, hasManagementRole, roleLabel } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export default async function PanelLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const { supabase, profile, memberships } = await requireAuth();
-  const links = profile.role === "admin" ? adminLinks : residentLinks;
+  const links = hasManagementRole(profile.role) ? adminLinks : residentLinks;
   const membershipApartments = memberships
     .map((membership) => ({
       id: membership.apartment_id,
@@ -42,8 +42,8 @@ export default async function PanelLayout({
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#fef9c3_0%,#f8fafc_55%,#e2e8f0_100%)]">
-      <div className="mx-auto grid min-h-screen max-w-7xl gap-5 p-4 md:grid-cols-[260px_1fr] md:p-6">
-        <aside className="rounded-2xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur">
+      <div className="mx-auto grid min-h-screen max-w-7xl gap-4 p-3 md:grid-cols-[260px_1fr] md:gap-5 md:p-6">
+        <aside className="rounded-2xl border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur sm:p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
             Apartman Paneli
           </p>
@@ -52,15 +52,15 @@ export default async function PanelLayout({
           </h2>
           <p className="text-sm text-slate-600">{profile.email}</p>
           <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
-            Rol: {profile.role}
+            Rol: {roleLabel(profile.role)}
           </p>
 
-          <nav className="mt-6 space-y-2">
+          <nav className="mt-5 grid grid-cols-2 gap-2 md:mt-6 md:grid-cols-1">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="block rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-900"
+                className="block rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-900 md:text-left"
               >
                 {link.label}
               </Link>
@@ -94,7 +94,7 @@ export default async function PanelLayout({
             </SubmitButton>
           </form>
         </aside>
-        <main className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur md:p-6">
+        <main className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur sm:p-5 md:p-6">
           {children}
         </main>
       </div>

@@ -24,6 +24,10 @@ type BalanceRow = {
   balance: number;
 };
 
+type FinanceSettingsRow = {
+  opening_carry_over: number;
+};
+
 export default async function PanelHomePage() {
   const { supabase } = await requireAuth();
   const { startIso, endIso, start } = getCurrentMonthRange();
@@ -39,6 +43,7 @@ export default async function PanelHomePage() {
     totalChargesResult,
     apartmentsResult,
     balancesResult,
+    settingsResult,
   ] = await Promise.all([
     supabase
       .from("payments")
@@ -80,6 +85,11 @@ export default async function PanelHomePage() {
       .from("apartment_balance_summary")
       .select("apartment_id, total_charges, total_payments, balance")
       .returns<BalanceRow[]>(),
+    supabase
+      .from("finance_settings")
+      .select("opening_carry_over")
+      .eq("id", 1)
+      .maybeSingle<FinanceSettingsRow>(),
   ]);
 
   const monthIncome = sumByAmount(monthPaymentsResult.data);
@@ -90,11 +100,12 @@ export default async function PanelHomePage() {
   const totalIncome = sumByAmount(totalPaymentsResult.data);
   const totalExpense = sumByAmount(totalExpensesResult.data);
   const totalExpected = sumByAmount(totalChargesResult.data);
+  const openingCarryOver = Number(settingsResult.data?.opening_carry_over ?? 0);
 
   const carryIncome = sumByAmount(beforePaymentsResult.data);
   const carryExpense = sumByAmount(beforeExpensesResult.data);
-  const carryOver = carryIncome - carryExpense;
-  const cashOnHand = totalIncome - totalExpense;
+  const carryOver = openingCarryOver + (carryIncome - carryExpense);
+  const cashOnHand = openingCarryOver + (totalIncome - totalExpense);
 
   const apartments = apartmentsResult.data ?? [];
   const balances = balancesResult.data ?? [];
@@ -124,7 +135,7 @@ export default async function PanelHomePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
             Genel Durum
           </p>
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">
             {monthLabel()} Ozeti
           </h1>
         </div>
@@ -135,13 +146,13 @@ export default async function PanelHomePage() {
           <p className="text-xs uppercase tracking-wide text-emerald-700">
             Toplanan Toplam Gelir
           </p>
-          <p className="mt-2 text-2xl font-semibold text-emerald-900">
+          <p className="mt-2 text-xl font-semibold text-emerald-900 sm:text-2xl">
             {formatMoney(totalIncome)}
           </p>
         </article>
         <article className="rounded-xl border border-rose-200 bg-rose-50 p-4">
           <p className="text-xs uppercase tracking-wide text-rose-700">Toplam Gider</p>
-          <p className="mt-2 text-2xl font-semibold text-rose-900">
+          <p className="mt-2 text-xl font-semibold text-rose-900 sm:text-2xl">
             {formatMoney(totalExpense)}
           </p>
         </article>
@@ -149,19 +160,19 @@ export default async function PanelHomePage() {
           <p className="text-xs uppercase tracking-wide text-amber-700">
             Beklenen Aidat
           </p>
-          <p className="mt-2 text-2xl font-semibold text-amber-900">
+          <p className="mt-2 text-xl font-semibold text-amber-900 sm:text-2xl">
             {formatMoney(totalExpected)}
           </p>
         </article>
         <article className="rounded-xl border border-sky-200 bg-sky-50 p-4">
           <p className="text-xs uppercase tracking-wide text-sky-700">Devir</p>
-          <p className="mt-2 text-2xl font-semibold text-sky-900">
+          <p className="mt-2 text-xl font-semibold text-sky-900 sm:text-2xl">
             {formatMoney(carryOver)}
           </p>
         </article>
         <article className="rounded-xl border border-slate-300 bg-slate-100 p-4">
           <p className="text-xs uppercase tracking-wide text-slate-700">Kasada Kalan</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">
+          <p className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl">
             {formatMoney(cashOnHand)}
           </p>
         </article>
@@ -204,24 +215,24 @@ export default async function PanelHomePage() {
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">Borclu Daire</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{debtCount}</p>
+          <p className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl">{debtCount}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">On Odemeli Daire</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{creditCount}</p>
+          <p className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl">{creditCount}</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">
             Donem Baslangici
           </p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">
+          <p className="mt-2 text-xl font-semibold text-slate-900 sm:text-2xl">
             {new Intl.DateTimeFormat("tr-TR").format(start)}
           </p>
         </div>
       </div>
 
       <div className="mt-7 overflow-x-auto rounded-2xl border border-slate-200">
-        <table className="w-full min-w-[680px] text-left text-sm">
+        <table className="w-full min-w-[620px] text-left text-sm">
           <thead className="bg-slate-900 text-white">
             <tr>
               <th className="px-4 py-3">Daire</th>

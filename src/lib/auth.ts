@@ -3,20 +3,22 @@ import type { User } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
 
+export type AppRole = "admin" | "apt_manager" | "resident";
+
 type Profile = {
   id: string;
   full_name: string;
   email: string;
   phone: string | null;
   is_active: boolean;
-  role: "admin" | "resident";
+  role: AppRole;
 };
 
 type ProfileDbRow = {
   id: string;
   full_name: string;
   email: string;
-  role: "admin" | "resident";
+  role: AppRole;
   phone?: string | null;
   is_active?: boolean | null;
 };
@@ -38,6 +40,21 @@ function normalizeProfile(row: ProfileDbRow): Profile {
     phone: row.phone ?? null,
     is_active: row.is_active ?? true,
   };
+}
+
+export function hasManagementRole(role: AppRole) {
+  return role === "admin" || role === "apt_manager";
+}
+
+export function roleLabel(role: AppRole) {
+  switch (role) {
+    case "admin":
+      return "Admin Yonetici";
+    case "apt_manager":
+      return "Apartman Yonetici";
+    default:
+      return "Kullanici";
+  }
 }
 
 async function fetchProfile(
@@ -144,6 +161,16 @@ export async function requireAdmin() {
   const context = await requireAuth();
 
   if (context.profile.role !== "admin") {
+    redirect("/panel");
+  }
+
+  return context;
+}
+
+export async function requireManager() {
+  const context = await requireAuth();
+
+  if (!hasManagementRole(context.profile.role)) {
     redirect("/panel");
   }
 

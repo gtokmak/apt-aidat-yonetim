@@ -1,4 +1,4 @@
-import { requireAuth } from "@/lib/auth";
+import { hasManagementRole, requireAuth } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 import { formatMoney } from "@/lib/utils";
 
@@ -6,6 +6,7 @@ type Apartment = {
   id: string;
   number: number;
   label: string;
+  is_dues_exempt: boolean;
 };
 
 type BalanceRow = {
@@ -29,26 +30,26 @@ type ProfileRow = {
 
 export default async function ApartmentsPage() {
   const { supabase, profile, memberships } = await requireAuth();
-  const isAdmin = profile.role === "admin";
+  const canManage = hasManagementRole(profile.role);
   const apartmentIds = memberships.map((item) => item.apartment_id);
   const residentHasApartment = apartmentIds.length > 0;
 
-  const apartmentsPromise = isAdmin
+  const apartmentsPromise = canManage
     ? supabase
         .from("apartments")
-        .select("id, number, label")
+        .select("id, number, label, is_dues_exempt")
         .order("number", { ascending: true })
         .returns<Apartment[]>()
     : residentHasApartment
       ? supabase
           .from("apartments")
-          .select("id, number, label")
+          .select("id, number, label, is_dues_exempt")
           .in("id", apartmentIds)
           .order("number", { ascending: true })
           .returns<Apartment[]>()
       : Promise.resolve({ data: [] as Apartment[] });
 
-  const balancesPromise = isAdmin
+  const balancesPromise = canManage
     ? supabase
         .from("apartment_balance_summary")
         .select("apartment_id, total_charges, total_payments, balance")
@@ -61,7 +62,7 @@ export default async function ApartmentsPage() {
           .returns<BalanceRow[]>()
       : Promise.resolve({ data: [] as BalanceRow[] });
 
-  const membersPromise = isAdmin
+  const membersPromise = canManage
     ? supabase
         .from("apartment_memberships")
         .select("apartment_id, user_id, ended_at")
@@ -106,7 +107,7 @@ export default async function ApartmentsPage() {
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
         Daireler
       </p>
-      <h1 className="text-2xl font-semibold text-slate-900">
+      <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">
         Daire Bazli Bakiye Takibi
       </h1>
 
@@ -133,6 +134,11 @@ export default async function ApartmentsPage() {
                 <h2 className="mt-1 text-lg font-semibold text-slate-900">
                   {display?.displayText ?? `${apartment.number}. Daire ${apartment.label}`}
                 </h2>
+                {apartment.is_dues_exempt ? (
+                  <p className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">
+                    Aidattan Muaf
+                  </p>
+                ) : null}
 
                 <dl className="mt-4 space-y-2 text-sm">
                   <div className="flex items-center justify-between gap-3">
@@ -163,7 +169,7 @@ export default async function ApartmentsPage() {
                   </div>
                 </dl>
 
-                {isAdmin ? (
+                {canManage ? (
                   <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                     <p className="font-semibold text-slate-800">Yetkili Kullanicilar</p>
                     {aptMembers.length === 0 ? (

@@ -19,6 +19,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), sans-serif;
+  overflow-x: hidden;
 }
 
 h1,
@@ -39,4 +40,5 @@ select,
 button,
 textarea {
   font: inherit;
+  max-width: 100%;
 }

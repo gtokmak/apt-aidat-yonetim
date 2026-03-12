@@ -3,9 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { hasManagementRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-async function assertAdmin() {
+type Role = "admin" | "apt_manager" | "resident";
+
+async function assertManager() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -19,9 +22,9 @@ async function assertAdmin() {
     .from("profiles")
     .select("role")
     .eq("id", user.id)
-    .maybeSingle<{ role: "admin" | "resident" }>();
+    .maybeSingle<{ role: Role }>();
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !hasManagementRole(profile.role)) {
     redirect("/panel");
   }
 
@@ -37,6 +40,14 @@ function revalidatePanelPaths() {
 }
 
 function toNumberOrNull(value: FormDataEntryValue | null) {
+  if (value === null) {
+    return null;
+  }
+
+  if (typeof value === "string" && value.trim() === "") {
+    return null;
+  }
+
   const parsed = Number(value);
   if (Number.isNaN(parsed)) {
     return null;
@@ -45,7 +56,7 @@ function toNumberOrNull(value: FormDataEntryValue | null) {
 }
 
 export async function createPeriodAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
 
   const periodMonthRaw = String(formData.get("periodMonth") ?? "").trim();
   const monthlyDueRaw = toNumberOrNull(formData.get("monthlyDue"));
@@ -71,7 +82,7 @@ export async function createPeriodAction(formData: FormData) {
 }
 
 export async function createSpecialAssessmentAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
 
   const title = String(formData.get("title") ?? "").trim();
   const amount = toNumberOrNull(formData.get("perApartmentAmount"));
@@ -100,7 +111,7 @@ export async function createSpecialAssessmentAction(formData: FormData) {
 }
 
 export async function addPaymentAction(formData: FormData) {
-  const { supabase, userId } = await assertAdmin();
+  const { supabase, userId } = await assertManager();
 
   const apartmentId = String(formData.get("apartmentId") ?? "").trim();
   const amount = toNumberOrNull(formData.get("amount"));
@@ -128,7 +139,7 @@ export async function addPaymentAction(formData: FormData) {
 }
 
 export async function updatePaymentAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
 
   const paymentId = String(formData.get("paymentId") ?? "").trim();
   const apartmentId = String(formData.get("apartmentId") ?? "").trim();
@@ -159,7 +170,7 @@ export async function updatePaymentAction(formData: FormData) {
 }
 
 export async function deletePaymentAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
   const paymentId = String(formData.get("paymentId") ?? "").trim();
 
   if (!paymentId) {
@@ -176,7 +187,7 @@ export async function deletePaymentAction(formData: FormData) {
 }
 
 export async function addExpenseAction(formData: FormData) {
-  const { supabase, userId } = await assertAdmin();
+  const { supabase, userId } = await assertManager();
 
   const categoryId = String(formData.get("categoryId") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim();
@@ -221,7 +232,7 @@ export async function addExpenseAction(formData: FormData) {
 }
 
 export async function updateExpenseAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
 
   const expenseId = String(formData.get("expenseId") ?? "").trim();
   const categoryId = String(formData.get("categoryId") ?? "").trim();
@@ -267,7 +278,7 @@ export async function updateExpenseAction(formData: FormData) {
 }
 
 export async function deleteExpenseAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
   const expenseId = String(formData.get("expenseId") ?? "").trim();
 
   if (!expenseId) {
@@ -284,7 +295,7 @@ export async function deleteExpenseAction(formData: FormData) {
 }
 
 export async function addExpenseCategoryAction(formData: FormData) {
-  const { supabase, userId } = await assertAdmin();
+  const { supabase, userId } = await assertManager();
 
   const name = String(formData.get("name") ?? "").trim();
 
@@ -310,7 +321,7 @@ export async function addExpenseCategoryAction(formData: FormData) {
 }
 
 export async function updateExpenseCategoryAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
   const categoryId = String(formData.get("categoryId") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
 
@@ -332,7 +343,7 @@ export async function updateExpenseCategoryAction(formData: FormData) {
 }
 
 export async function deleteExpenseCategoryAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
   const categoryId = String(formData.get("categoryId") ?? "").trim();
 
   if (!categoryId) {
@@ -369,4 +380,56 @@ export async function deleteExpenseCategoryAction(formData: FormData) {
 
   revalidatePanelPaths();
   redirect("/panel/yonetim?success=Kategori%20silindi.");
+}
+
+export async function setOpeningCarryOverAction(formData: FormData) {
+  const { supabase, userId } = await assertManager();
+  const openingCarryOver = toNumberOrNull(formData.get("openingCarryOver"));
+
+  if (openingCarryOver === null) {
+    redirect("/panel/yonetim?error=Devir%20tutari%20gecersiz.");
+  }
+
+  const { error } = await supabase.from("finance_settings").upsert(
+    {
+      id: 1,
+      opening_carry_over: openingCarryOver,
+      updated_by: userId,
+    },
+    { onConflict: "id" },
+  );
+
+  if (error) {
+    redirect(`/panel/yonetim?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePanelPaths();
+  redirect("/panel/yonetim?success=Devir%20bakiyesi%20guncellendi.");
+}
+
+export async function setApartmentDueExemptionAction(formData: FormData) {
+  const { supabase } = await assertManager();
+  const apartmentId = String(formData.get("apartmentId") ?? "").trim();
+  const isExemptRaw = String(formData.get("isExempt") ?? "").trim();
+
+  if (!apartmentId || !["true", "false"].includes(isExemptRaw)) {
+    redirect("/panel/yonetim?error=Aidat%20muafiyet%20bilgisi%20gecersiz.");
+  }
+
+  const isExempt = isExemptRaw === "true";
+  const { error } = await supabase
+    .from("apartments")
+    .update({ is_dues_exempt: isExempt })
+    .eq("id", apartmentId);
+
+  if (error) {
+    redirect(`/panel/yonetim?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePanelPaths();
+  redirect(
+    `/panel/yonetim?success=${encodeURIComponent(
+      isExempt ? "Daire aidattan muaf yapildi." : "Daire aidat muafiyeti kaldirildi.",
+    )}`,
+  );
 }

@@ -4,12 +4,13 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { hasManagementRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-type Role = "admin" | "resident";
+type Role = "admin" | "apt_manager" | "resident";
 type OccupantType = "owner" | "tenant";
 
-async function assertAdmin() {
+async function assertManager() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,11 +26,20 @@ async function assertAdmin() {
     .eq("id", user.id)
     .maybeSingle<{ role: Role }>();
 
-  if (!profile || profile.role !== "admin") {
+  if (!profile || !hasManagementRole(profile.role)) {
     redirect("/panel");
   }
 
-  return { supabase, userId: user.id };
+  return { supabase, userId: user.id, role: profile.role };
+}
+
+async function assertAdminOnly() {
+  const context = await assertManager();
+  if (context.role !== "admin") {
+    redirect("/panel/kullanicilar?error=Bu%20islem%20yalnizca%20admin%20icin%20acik.");
+  }
+
+  return context;
 }
 
 function revalidatePages() {
@@ -54,7 +64,7 @@ function getAppUrl() {
 }
 
 export async function inviteResidentAction(formData: FormData) {
-  const { supabase, userId } = await assertAdmin();
+  const { supabase, userId } = await assertManager();
 
   const apartmentId = String(formData.get("apartmentId") ?? "").trim();
   const email = String(formData.get("email") ?? "")
@@ -147,7 +157,7 @@ export async function inviteResidentAction(formData: FormData) {
 }
 
 export async function closeMembershipAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
 
   const membershipId = String(formData.get("membershipId") ?? "").trim();
   const endedAt = String(formData.get("endedAt") ?? "").trim();
@@ -170,7 +180,7 @@ export async function closeMembershipAction(formData: FormData) {
 }
 
 export async function cancelInvitationAction(formData: FormData) {
-  const { supabase } = await assertAdmin();
+  const { supabase } = await assertManager();
 
   const invitationId = String(formData.get("invitationId") ?? "").trim();
   if (!invitationId) {
@@ -192,7 +202,7 @@ export async function cancelInvitationAction(formData: FormData) {
 }
 
 export async function setUserActiveAction(formData: FormData) {
-  const { supabase, userId: adminUserId } = await assertAdmin();
+  const { supabase, userId: adminUserId } = await assertAdminOnly();
   const profileId = String(formData.get("profileId") ?? "").trim();
   const activeRaw = String(formData.get("active") ?? "").trim();
 
@@ -216,4 +226,31 @@ export async function setUserActiveAction(formData: FormData) {
 
   revalidatePages();
   redirect("/panel/kullanicilar?success=Kullanici%20durumu%20guncellendi.");
+}
+
+export async function setUserRoleAction(formData: FormData) {
+  const { supabase, userId: adminUserId } = await assertAdminOnly();
+  const profileId = String(formData.get("profileId") ?? "").trim();
+  const role = String(formData.get("role") ?? "").trim();
+
+  if (!profileId || !["resident", "apt_manager"].includes(role)) {
+    redirect("/panel/kullanicilar?error=Gecersiz%20rol%20guncelleme%20istegi.");
+  }
+
+  if (profileId === adminUserId) {
+    redirect("/panel/kullanicilar?error=Kendi%20rolunuzu%20degistiremezsiniz.");
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role: role as "resident" | "apt_manager" })
+    .eq("id", profileId)
+    .neq("role", "admin");
+
+  if (error) {
+    redirect(`/panel/kullanicilar?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePages();
+  redirect("/panel/kullanicilar?success=Kullanici%20rolu%20guncellendi.");
 }
