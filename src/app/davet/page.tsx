@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SubmitButton } from "@/components/submit-button";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/utils";
 
@@ -141,23 +142,23 @@ export default async function InvitationPage({
             className="h-10 w-full rounded-lg border border-slate-300 px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
           />
         </label>
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="Kaydediliyor..."
           className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
         >
           Sifreyi Kaydet
-        </button>
+        </SubmitButton>
       </form>
 
       {invitation.status === "pending" ? (
         <form action={acceptInvitationAction} className="mt-5">
           <input type="hidden" name="invitationId" value={invitation.id} />
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Davet kabul ediliyor..."
             className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
           >
             Daveti Kabul Et
-          </button>
+          </SubmitButton>
         </form>
       ) : (
         <p className="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">

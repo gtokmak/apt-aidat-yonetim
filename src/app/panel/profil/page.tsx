@@ -1,4 +1,5 @@
 import { requireAuth } from "@/lib/auth";
+import { SubmitButton } from "@/components/submit-button";
 
 import { changePasswordAction, updateProfileAction } from "./actions";
 
@@ -65,12 +66,12 @@ export default async function ProfilePage({
                 className="h-10 w-full rounded-lg border border-slate-200 bg-slate-100 px-3 text-slate-600"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Profil guncelleniyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Profili Guncelle
-            </button>
+            </SubmitButton>
           </form>
         </article>
 
@@ -97,12 +98,12 @@ export default async function ProfilePage({
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Sifre guncelleniyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Sifreyi Guncelle
-            </button>
+            </SubmitButton>
           </form>
         </article>
       </div>

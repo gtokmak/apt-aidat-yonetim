@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SubmitButton } from "@/components/submit-button";
 import { requireAuth } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 import { formatDate, formatMoney, monthLabel, sumByAmount } from "@/lib/utils";
@@ -186,12 +187,12 @@ export default async function LedgerPage({
                 className="h-10 rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Yukleniyor..."
               className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Goster
-            </button>
+            </SubmitButton>
           </form>
 
           <Link

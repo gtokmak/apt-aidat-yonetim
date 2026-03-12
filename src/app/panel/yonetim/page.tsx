@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { requireAdmin } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
+import { SubmitButton } from "@/components/submit-button";
 import { formatDate, formatMoney } from "@/lib/utils";
 
 import {
@@ -174,12 +175,12 @@ export default async function ManagementPage({
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Donem olusturuluyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Donemi Olustur
-            </button>
+            </SubmitButton>
           </form>
         </article>
 
@@ -231,12 +232,12 @@ export default async function ManagementPage({
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Odeme kaydediliyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Odemeyi Kaydet
-            </button>
+            </SubmitButton>
           </form>
         </article>
 
@@ -311,12 +312,12 @@ export default async function ManagementPage({
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Gider kaydediliyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Gideri Kaydet
-            </button>
+            </SubmitButton>
           </form>
         </article>
 
@@ -333,12 +334,12 @@ export default async function ManagementPage({
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Kategori ekleniyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Kategori Ekle
-            </button>
+            </SubmitButton>
           </form>
 
           <form action={updateExpenseCategoryAction} className="mt-4 grid gap-3">
@@ -367,12 +368,12 @@ export default async function ManagementPage({
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Kategori duzenleniyor..."
               className="h-10 rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-100"
             >
               Secili Kategoriyi Duzenle
-            </button>
+            </SubmitButton>
           </form>
 
           <form action={deleteExpenseCategoryAction} className="mt-3 grid gap-3">
@@ -391,12 +392,12 @@ export default async function ManagementPage({
                 ))}
               </select>
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Kategori siliniyor..."
               className="h-10 rounded-lg border border-rose-300 bg-rose-50 text-sm font-semibold text-rose-700 hover:bg-rose-100"
             >
               Secili Kategoriyi Sil / Pasife Al
-            </button>
+            </SubmitButton>
           </form>
         </article>
 
@@ -458,12 +459,12 @@ export default async function ManagementPage({
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Ek gider dagitiliyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700 md:col-span-2"
             >
               Ek Gideri Dagit
-            </button>
+            </SubmitButton>
           </form>
         </article>
 
@@ -526,21 +527,21 @@ export default async function ManagementPage({
                       placeholder="Aciklama"
                       className="h-9 rounded-md border border-slate-300 px-2 text-sm md:col-span-2"
                     />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Guncelleniyor..."
                       className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                     >
                       Guncelle
-                    </button>
+                    </SubmitButton>
                   </form>
                   <form action={deletePaymentAction} className="mt-2">
                     <input type="hidden" name="paymentId" value={payment.id} />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Siliniyor..."
                       className="h-8 rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100"
                     >
                       Odemeyi Sil
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               ))
@@ -624,21 +625,21 @@ export default async function ManagementPage({
                       placeholder="Aciklama"
                       className="h-9 rounded-md border border-slate-300 px-2 text-sm md:col-span-2"
                     />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Guncelleniyor..."
                       className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                     >
                       Guncelle
-                    </button>
+                    </SubmitButton>
                   </form>
                   <form action={deleteExpenseAction} className="mt-2">
                     <input type="hidden" name="expenseId" value={expense.id} />
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Siliniyor..."
                       className="h-8 rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100"
                     >
                       Gideri Sil
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               ))

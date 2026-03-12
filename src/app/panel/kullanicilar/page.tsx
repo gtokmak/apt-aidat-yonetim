@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
+import { SubmitButton } from "@/components/submit-button";
 import { formatDate } from "@/lib/utils";
 
 import {
@@ -202,12 +203,12 @@ export default async function UsersPage({
               />
             </label>
 
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Davet gonderiliyor..."
               className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
             >
               Davet Maili Gonder
-            </button>
+            </SubmitButton>
           </form>
         </article>
 
@@ -248,12 +249,12 @@ export default async function UsersPage({
                         name="endedAt"
                         className="h-9 rounded-md border border-slate-300 px-2 text-sm"
                       />
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        pendingText="Isleniyor..."
                         className="h-9 rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100"
                       >
                         Cikis Yapti Olarak Isaretle
-                      </button>
+                      </SubmitButton>
                     </form>
                   </div>
                 );
@@ -298,13 +299,13 @@ export default async function UsersPage({
                     name="active"
                     value={profile.is_active ? "false" : "true"}
                   />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="Guncelleniyor..."
                     disabled={profile.id === user.id}
                     className="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {profile.is_active ? "Pasife Al" : "Aktif Et"}
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             ))
@@ -348,12 +349,12 @@ export default async function UsersPage({
                   {invitation.status === "pending" ? (
                     <form action={cancelInvitationAction} className="mt-3">
                       <input type="hidden" name="invitationId" value={invitation.id} />
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        pendingText="Iptal ediliyor..."
                         className="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                       >
                         Daveti Iptal Et
-                      </button>
+                      </SubmitButton>
                     </form>
                   ) : null}
                 </div>

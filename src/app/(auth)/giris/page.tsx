@@ -1,4 +1,5 @@
 import { signInAction } from "@/app/(auth)/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { cookies } from "next/headers";
 
 export default async function LoginPage({
@@ -85,12 +86,12 @@ export default async function LoginPage({
               />
               Beni hatirla (e-posta)
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Giris yapiliyor..."
               className="h-11 w-full rounded-xl bg-slate-900 text-sm font-semibold text-white transition hover:bg-slate-700"
             >
               Giris Yap
-            </button>
+            </SubmitButton>
           </form>
 
           <p className="mt-5 text-sm text-slate-600">

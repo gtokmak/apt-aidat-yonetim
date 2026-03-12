@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { signOutAction } from "@/app/(auth)/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { requireAuth } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 
@@ -85,12 +86,12 @@ export default async function PanelLayout({
           </div>
 
           <form action={signOutAction} className="mt-6">
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Cikis yapiliyor..."
               className="h-10 w-full rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-100"
             >
               Cikis Yap
-            </button>
+            </SubmitButton>
           </form>
         </aside>
         <main className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm backdrop-blur md:p-6">
