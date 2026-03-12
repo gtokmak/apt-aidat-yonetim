@@ -231,7 +231,63 @@ export default async function PanelHomePage() {
         </div>
       </div>
 
-      <div className="mt-7 overflow-x-auto rounded-2xl border border-slate-200">
+      <div className="mt-7 md:hidden">
+        {apartmentRows.length === 0 ? (
+          <div className="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center text-sm text-slate-500">
+            Bu hesap icin goruntulenecek daire bulunamadi.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {apartmentRows.map((row) => (
+              <article
+                key={`mobile-${row.id}`}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Daire</p>
+                    <h2 className="mt-1 text-base font-semibold text-slate-900">
+                      {row.displayText}
+                    </h2>
+                  </div>
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                      row.balance > 0
+                        ? "bg-rose-100 text-rose-700"
+                        : row.balance < 0
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {row.balance > 0 ? "Borclu" : row.balance < 0 ? "On Odemeli" : "Esit"}
+                  </span>
+                </div>
+
+                <dl className="mt-4 grid gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-slate-500">Toplam Borc</dt>
+                    <dd className="font-semibold text-slate-900">
+                      {formatMoney(row.totalCharges)}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-slate-500">Toplam Odeme</dt>
+                    <dd className="font-semibold text-slate-900">
+                      {formatMoney(row.totalPayments)}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
+                    <dt className="text-slate-700">Bakiye</dt>
+                    <dd className="font-bold text-slate-900">{formatMoney(row.balance)}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-7 hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
         <table className="w-full min-w-[620px] text-left text-sm">
           <thead className="bg-slate-900 text-white">
             <tr>

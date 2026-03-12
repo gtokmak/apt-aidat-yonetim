@@ -2,10 +2,20 @@ import Link from "next/link";
 
 import { signOutAction } from "@/app/(auth)/actions";
 import { SubmitButton } from "@/components/submit-button";
+import { PanelSidebar } from "@/components/panel-sidebar";
 import { requireAuth, hasManagementRole, roleLabel } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 
 export const dynamic = "force-dynamic";
+
+const navIcons: Record<string, string> = {
+  "/panel": "📊",
+  "/panel/defter": "📒",
+  "/panel/daireler": "🏠",
+  "/panel/kullanicilar": "👥",
+  "/panel/yonetim": "⚙️",
+  "/panel/profil": "👤",
+};
 
 const adminLinks = [
   { href: "/panel", label: "Genel Durum" },
@@ -42,12 +52,13 @@ export default async function PanelLayout({
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#fef9c3_0%,#f8fafc_55%,#e2e8f0_100%)]">
-      <div className="mx-auto grid min-h-screen max-w-7xl gap-4 p-3 md:grid-cols-[260px_1fr] md:gap-5 md:p-6">
-        <aside className="rounded-2xl border border-slate-200 bg-white/85 p-4 shadow-sm backdrop-blur sm:p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+      <div className="mx-auto grid min-h-screen max-w-7xl gap-3 p-3 md:grid-cols-[260px_1fr] md:gap-5 md:p-6">
+        <PanelSidebar userName={profile.full_name || "Kullanici"}>
+          {/* Desktop-only header */}
+          <p className="hidden text-xs font-semibold uppercase tracking-[0.16em] text-amber-700 md:block">
             Apartman Paneli
           </p>
-          <h2 className="mt-2 text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-slate-900 md:mt-2">
             {profile.full_name || "Kullanici"}
           </h2>
           <p className="text-sm text-slate-600">{profile.email}</p>
@@ -55,19 +66,22 @@ export default async function PanelLayout({
             Rol: {roleLabel(profile.role)}
           </p>
 
-          <nav className="mt-5 grid grid-cols-2 gap-2 md:mt-6 md:grid-cols-1">
+          <nav className="mt-4 grid grid-cols-2 gap-2 md:mt-6 md:grid-cols-1">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="block rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-900 md:text-left"
+                className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-900"
               >
+                <span className="text-base" aria-hidden="true">
+                  {navIcons[link.href] ?? "📄"}
+                </span>
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
             <p className="font-semibold text-slate-800">Bagli Daireler</p>
             {memberships.length > 0 ? (
               <ul className="mt-2 space-y-1">
@@ -85,7 +99,7 @@ export default async function PanelLayout({
             )}
           </div>
 
-          <form action={signOutAction} className="mt-6">
+          <form action={signOutAction} className="mt-5">
             <SubmitButton
               pendingText="Cikis yapiliyor..."
               className="h-10 w-full rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:border-slate-500 hover:bg-slate-100"
@@ -93,7 +107,7 @@ export default async function PanelLayout({
               Cikis Yap
             </SubmitButton>
           </form>
-        </aside>
+        </PanelSidebar>
         <main className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur sm:p-5 md:p-6">
           {children}
         </main>

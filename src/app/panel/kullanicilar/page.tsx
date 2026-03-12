@@ -1,6 +1,7 @@
 import { requireManager, roleLabel } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 import { SubmitButton } from "@/components/submit-button";
+import { SectionTabs } from "@/components/section-tabs";
 import { formatDate } from "@/lib/utils";
 
 import {
@@ -138,321 +139,383 @@ export default async function UsersPage({
         </p>
       ) : null}
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">
-            1) E-posta ile Kullanici Davet Et
-          </h2>
-          <form action={inviteResidentAction} className="mt-4 grid gap-3">
-            <label className="space-y-1 text-sm">
-              <span className="font-medium text-slate-700">Daire</span>
-              <select
-                required
-                name="apartmentId"
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-              >
-                <option value="">Seciniz</option>
-                {apartments.map((apartment) => (
-                  <option key={apartment.id} value={apartment.id}>
-                    {apartmentDisplayMap.get(apartment.id)?.displayText ??
-                      `${apartment.number}. Daire ${apartment.label}`}
-                  </option>
-                ))}
-              </select>
-            </label>
+      <div className="mt-6">
+        <SectionTabs
+          label="Kullanici islemi secin"
+          tabs={[
+            {
+              id: "davet",
+              label: "Davet Gonder",
+              content: (
+                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <h2 className="text-base font-semibold text-slate-900">
+                    E-posta ile Kullanici Davet Et
+                  </h2>
+                  <form action={inviteResidentAction} className="mt-4 grid gap-3 lg:grid-cols-2">
+                    <label className="space-y-1 text-sm">
+                      <span className="font-medium text-slate-700">Daire</span>
+                      <select
+                        required
+                        name="apartmentId"
+                        className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      >
+                        <option value="">Seciniz</option>
+                        {apartments.map((apartment) => (
+                          <option key={apartment.id} value={apartment.id}>
+                            {apartmentDisplayMap.get(apartment.id)?.displayText ??
+                              `${apartment.number}. Daire ${apartment.label}`}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-medium text-slate-700">E-posta</span>
-              <input
-                required
-                type="email"
-                name="email"
-                placeholder="kiraci@eposta.com"
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-              />
-            </label>
+                    <label className="space-y-1 text-sm">
+                      <span className="font-medium text-slate-700">E-posta</span>
+                      <input
+                        required
+                        type="email"
+                        name="email"
+                        placeholder="kiraci@eposta.com"
+                        className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      />
+                    </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-medium text-slate-700">Kullanici Tipi</span>
-              <select
-                required
-                name="occupantType"
-                defaultValue="tenant"
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-              >
-                <option value="tenant">Kiraci</option>
-                <option value="owner">Ev Sahibi</option>
-              </select>
-            </label>
+                    <label className="space-y-1 text-sm">
+                      <span className="font-medium text-slate-700">Kullanici Tipi</span>
+                      <select
+                        required
+                        name="occupantType"
+                        defaultValue="tenant"
+                        className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      >
+                        <option value="tenant">Kiraci</option>
+                        <option value="owner">Ev Sahibi</option>
+                      </select>
+                    </label>
 
-            <label className="space-y-1 text-sm">
-              <span className="font-medium text-slate-700">Baslangic Tarihi</span>
-              <input
-                required
-                type="date"
-                name="startsOn"
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-              />
-            </label>
-
-            <label className="space-y-1 text-sm">
-              <span className="font-medium text-slate-700">Not</span>
-              <input
-                type="text"
-                name="note"
-                placeholder="Opsiyonel not"
-                className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-              />
-            </label>
-
-            <SubmitButton
-              pendingText="Davet gonderiliyor..."
-              className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700"
-            >
-              Davet Maili Gonder
-            </SubmitButton>
-          </form>
-        </article>
-
-        <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">
-            2) Aktif Oturum Kayitlari
-          </h2>
-          <div className="mt-4 space-y-3">
-            {activeMemberships.length === 0 ? (
-              <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
-                Aktif kayit yok.
-              </p>
-            ) : (
-              activeMemberships.map((membership) => {
-                const profile = profileMap.get(membership.user_id);
-                return (
-                  <div
-                    key={membership.id}
-                    className="rounded-lg border border-slate-200 bg-white p-3"
-                  >
-                    <p className="text-sm font-semibold text-slate-900">
-                      {apartmentDisplayMap.get(membership.apartment_id)?.displayText ??
-                        `Daire ${membership.apartments?.number ?? "-"}`}
-                    </p>
-                    <p className="mt-1 break-words text-sm text-slate-700">
-                      {profile?.full_name || "Isimsiz"} - {profile?.email || "-"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600">
-                      Tip: {occupantTypeLabel(membership.occupant_type)} | Giris:{" "}
-                      {formatDate(membership.started_at)}
-                    </p>
-
-                    <form action={closeMembershipAction} className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <input type="hidden" name="membershipId" value={membership.id} />
+                    <label className="space-y-1 text-sm">
+                      <span className="font-medium text-slate-700">Baslangic Tarihi</span>
                       <input
                         required
                         type="date"
-                        name="endedAt"
-                        className="h-9 w-full rounded-md border border-slate-300 px-2 text-sm sm:w-auto"
+                        name="startsOn"
+                        className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                       />
-                      <SubmitButton
-                        pendingText="Isleniyor..."
-                        className="h-9 w-full rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 sm:w-auto"
-                      >
-                        Cikis Yapti Olarak Isaretle
-                      </SubmitButton>
-                    </form>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </article>
-      </div>
+                    </label>
 
-      <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <h2 className="text-base font-semibold text-slate-900">
-          3) Kullanici Durum Yonetimi (Aktif / Pasif)
-        </h2>
-        <div className="mt-4 space-y-3">
-          {manageableProfiles.length === 0 ? (
-            <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
-              Yonetilecek kullanici bulunamadi.
-            </p>
-          ) : (
-            manageableProfiles.map((profile) => (
-              <div
-                key={profile.id}
-                className="rounded-lg border border-slate-200 bg-white p-3"
-              >
-                <p className="break-words text-sm font-semibold text-slate-900">
-                  {profile.full_name || "Isimsiz"} - {profile.email}
-                </p>
-                <p className="mt-1 text-xs text-slate-600">
-                  Rol: {roleLabel(profile.role)} |{" "}
-                  Tel: {profile.phone || "-"} | Durum:{" "}
-                  <span
-                    className={
-                      profile.is_active ? "font-semibold text-emerald-700" : "font-semibold text-rose-700"
-                    }
-                  >
-                    {profile.is_active ? "Aktif" : "Pasif"}
-                  </span>
-                </p>
-                <form action={setUserActiveAction} className="mt-2">
-                  <input type="hidden" name="profileId" value={profile.id} />
-                  <input
-                    type="hidden"
-                    name="active"
-                    value={profile.is_active ? "false" : "true"}
-                  />
-                  <SubmitButton
-                    pendingText="Guncelleniyor..."
-                    disabled={!isAdmin || profile.id === user.id}
-                    className="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {profile.is_active ? "Pasife Al" : "Aktif Et"}
-                  </SubmitButton>
-                </form>
-              </div>
-            ))
-          )}
-        </div>
-        {!isAdmin ? (
-          <p className="mt-3 text-xs text-slate-500">
-            Kullanici aktif/pasif islemi yalnizca admin yonetici tarafindan yapilir.
-          </p>
-        ) : null}
-      </div>
+                    <label className="space-y-1 text-sm lg:col-span-2">
+                      <span className="font-medium text-slate-700">Not</span>
+                      <input
+                        type="text"
+                        name="note"
+                        placeholder="Opsiyonel not"
+                        className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      />
+                    </label>
 
-      {isAdmin ? (
-        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">
-            4) Kullanici Rol Yonetimi (Apartman Yonetici / Kullanici)
-          </h2>
-          <div className="mt-4 space-y-3">
-            {manageableProfiles.length === 0 ? (
-              <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
-                Rol guncellenecek kullanici bulunamadi.
-              </p>
-            ) : (
-              manageableProfiles.map((profile) => (
-                <form
-                  key={`role-${profile.id}`}
-                  action={setUserRoleAction}
-                  className="rounded-lg border border-slate-200 bg-white p-3"
-                >
-                  <p className="text-sm font-semibold text-slate-900">
-                    {profile.full_name || "Isimsiz"} - {profile.email}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Mevcut Rol: {roleLabel(profile.role)}
-                  </p>
-                  <input type="hidden" name="profileId" value={profile.id} />
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <select
-                      name="role"
-                      defaultValue={profile.role}
-                      className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs"
-                    >
-                      <option value="resident">Kullanici</option>
-                      <option value="apt_manager">Apartman Yonetici</option>
-                    </select>
                     <SubmitButton
-                      pendingText="Rol guncelleniyor..."
-                      className="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                      pendingText="Davet gonderiliyor..."
+                      className="h-10 rounded-lg bg-slate-900 text-sm font-semibold text-white hover:bg-slate-700 lg:col-span-2"
                     >
-                      Rolu Guncelle
+                      Davet Maili Gonder
                     </SubmitButton>
-                  </div>
-                </form>
-              ))
-            )}
-          </div>
-        </div>
-      ) : null}
-
-      <div className="mt-6 grid gap-5 xl:grid-cols-2">
-        <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">Davet Kayitlari</h2>
-          <div className="mt-4 space-y-3">
-            {invitations.length === 0 ? (
-              <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
-                Davet kaydi yok.
-              </p>
-            ) : (
-              invitations.map((invitation) => (
-                <div
-                  key={invitation.id}
-                  className="rounded-lg border border-slate-200 bg-white p-3"
-                >
-                  <p className="text-sm font-semibold text-slate-900">
-                    {apartmentDisplayMap.get(invitation.apartment_id)?.displayText ??
-                      `Daire ${invitation.apartments?.number ?? "-"}`}
-                  </p>
-                  <p className="mt-1 break-all text-sm text-slate-700">{invitation.email}</p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {occupantTypeLabel(invitation.occupant_type)} | Baslangic:{" "}
-                    {formatDate(invitation.starts_on)} | Durum: {invitation.status}
-                  </p>
+                  </form>
+                </article>
+              ),
+            },
+            {
+              id: "aktif",
+              label: "Aktif Kayitlar",
+              content: (
+                <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Aktif Oturum Kayitlari
+                  </h2>
                   <p className="mt-1 text-xs text-slate-500">
-                    Davet: {formatDate(invitation.invited_at)}
-                    {invitation.accepted_at
-                      ? ` | Kabul: ${formatDate(invitation.accepted_at)}`
-                      : ""}
+                    {activeMemberships.length} aktif kayit bulundu
                   </p>
-                  {invitation.note ? (
-                    <p className="mt-1 text-xs text-slate-600">Not: {invitation.note}</p>
-                  ) : null}
+                  <div className="mt-4 space-y-3">
+                    {activeMemberships.length === 0 ? (
+                      <p className="rounded-lg border border-slate-200 bg-white px-3 py-6 text-center text-sm text-slate-600">
+                        Aktif kayit yok.
+                      </p>
+                    ) : (
+                      activeMemberships.map((membership) => {
+                        const profile = profileMap.get(membership.user_id);
+                        return (
+                          <div
+                            key={membership.id}
+                            className="rounded-lg border border-slate-200 bg-white p-3"
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-slate-900">
+                                  {apartmentDisplayMap.get(membership.apartment_id)?.displayText ??
+                                    `Daire ${membership.apartments?.number ?? "-"}`}
+                                </p>
+                                <p className="mt-1 break-words text-sm text-slate-700">
+                                  {profile?.full_name || "Isimsiz"} - {profile?.email || "-"}
+                                </p>
+                              </div>
+                              <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                                {occupantTypeLabel(membership.occupant_type)}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-600">
+                              Giris: {formatDate(membership.started_at)}
+                            </p>
 
-                  {invitation.status === "pending" ? (
-                    <form action={cancelInvitationAction} className="mt-3">
-                      <input type="hidden" name="invitationId" value={invitation.id} />
-                      <SubmitButton
-                        pendingText="Iptal ediliyor..."
-                        className="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                      >
-                        Daveti Iptal Et
-                      </SubmitButton>
-                    </form>
+                            <form action={closeMembershipAction} className="mt-3 flex flex-col gap-2 sm:flex-row">
+                              <input type="hidden" name="membershipId" value={membership.id} />
+                              <input
+                                required
+                                type="date"
+                                name="endedAt"
+                                className="h-9 w-full rounded-md border border-slate-300 px-2 text-sm sm:w-auto"
+                              />
+                              <SubmitButton
+                                pendingText="Isleniyor..."
+                                className="h-9 w-full rounded-md border border-rose-300 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100 sm:w-auto"
+                              >
+                                Cikis Yapti Olarak Isaretle
+                              </SubmitButton>
+                            </form>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </article>
+              ),
+            },
+            {
+              id: "yonetim",
+              label: "Kullanici Yonetimi",
+              content: (
+                <div className="space-y-5">
+                  <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <h2 className="text-base font-semibold text-slate-900">
+                      Kullanici Durum Yonetimi (Aktif / Pasif)
+                    </h2>
+                    <div className="mt-4 space-y-3">
+                      {manageableProfiles.length === 0 ? (
+                        <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+                          Yonetilecek kullanici bulunamadi.
+                        </p>
+                      ) : (
+                        manageableProfiles.map((profile) => (
+                          <div
+                            key={profile.id}
+                            className="rounded-lg border border-slate-200 bg-white p-3"
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="break-words text-sm font-semibold text-slate-900">
+                                  {profile.full_name || "Isimsiz"}
+                                </p>
+                                <p className="break-all text-xs text-slate-600">{profile.email}</p>
+                              </div>
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                  profile.is_active
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-rose-100 text-rose-700"
+                                }`}
+                              >
+                                {profile.is_active ? "Aktif" : "Pasif"}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Rol: {roleLabel(profile.role)} | Tel: {profile.phone || "-"}
+                            </p>
+                            <form action={setUserActiveAction} className="mt-2">
+                              <input type="hidden" name="profileId" value={profile.id} />
+                              <input
+                                type="hidden"
+                                name="active"
+                                value={profile.is_active ? "false" : "true"}
+                              />
+                              <SubmitButton
+                                pendingText="Guncelleniyor..."
+                                disabled={!isAdmin || profile.id === user.id}
+                                className="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {profile.is_active ? "Pasife Al" : "Aktif Et"}
+                              </SubmitButton>
+                            </form>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    {!isAdmin ? (
+                      <p className="mt-3 text-xs text-slate-500">
+                        Kullanici aktif/pasif islemi yalnizca admin yonetici tarafindan yapilir.
+                      </p>
+                    ) : null}
+                  </article>
+
+                  {isAdmin ? (
+                    <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <h2 className="text-base font-semibold text-slate-900">
+                        Kullanici Rol Yonetimi
+                      </h2>
+                      <div className="mt-4 space-y-3">
+                        {manageableProfiles.length === 0 ? (
+                          <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+                            Rol guncellenecek kullanici bulunamadi.
+                          </p>
+                        ) : (
+                          manageableProfiles.map((profile) => (
+                            <form
+                              key={`role-${profile.id}`}
+                              action={setUserRoleAction}
+                              className="rounded-lg border border-slate-200 bg-white p-3"
+                            >
+                              <p className="text-sm font-semibold text-slate-900">
+                                {profile.full_name || "Isimsiz"} - {profile.email}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-600">
+                                Mevcut Rol: {roleLabel(profile.role)}
+                              </p>
+                              <input type="hidden" name="profileId" value={profile.id} />
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <select
+                                  name="role"
+                                  defaultValue={profile.role}
+                                  className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
+                                >
+                                  <option value="resident">Kullanici</option>
+                                  <option value="apt_manager">Apartman Yonetici</option>
+                                </select>
+                                <SubmitButton
+                                  pendingText="Rol guncelleniyor..."
+                                  className="h-9 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                >
+                                  Rolu Guncelle
+                                </SubmitButton>
+                              </div>
+                            </form>
+                          ))
+                        )}
+                      </div>
+                    </article>
                   ) : null}
                 </div>
-              ))
-            )}
-          </div>
-        </article>
+              ),
+            },
+            {
+              id: "gecmis",
+              label: "Kayit Gecmisi",
+              content: (
+                <div className="grid gap-5 lg:grid-cols-2">
+                  <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <h2 className="text-base font-semibold text-slate-900">Davet Kayitlari</h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {invitations.length} kayit
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      {invitations.length === 0 ? (
+                        <p className="rounded-lg border border-slate-200 bg-white px-3 py-6 text-center text-sm text-slate-600">
+                          Davet kaydi yok.
+                        </p>
+                      ) : (
+                        invitations.map((invitation) => (
+                          <div
+                            key={invitation.id}
+                            className="rounded-lg border border-slate-200 bg-white p-3"
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <p className="text-sm font-semibold text-slate-900">
+                                {apartmentDisplayMap.get(invitation.apartment_id)?.displayText ??
+                                  `Daire ${invitation.apartments?.number ?? "-"}`}
+                              </p>
+                              <span
+                                className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                  invitation.status === "accepted"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : invitation.status === "pending"
+                                      ? "bg-amber-100 text-amber-700"
+                                      : "bg-slate-100 text-slate-600"
+                                }`}
+                              >
+                                {invitation.status}
+                              </span>
+                            </div>
+                            <p className="mt-1 break-all text-sm text-slate-700">{invitation.email}</p>
+                            <p className="mt-1 text-xs text-slate-600">
+                              {occupantTypeLabel(invitation.occupant_type)} | Baslangic:{" "}
+                              {formatDate(invitation.starts_on)}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Davet: {formatDate(invitation.invited_at)}
+                              {invitation.accepted_at
+                                ? ` | Kabul: ${formatDate(invitation.accepted_at)}`
+                                : ""}
+                            </p>
+                            {invitation.note ? (
+                              <p className="mt-1 text-xs text-slate-600">Not: {invitation.note}</p>
+                            ) : null}
 
-        <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-base font-semibold text-slate-900">
-            Kiraci / Oturum Gecmisi
-          </h2>
-          <div className="mt-4 space-y-3">
-            {historicalMemberships.length === 0 ? (
-              <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
-                Gecmis kayit yok.
-              </p>
-            ) : (
-              historicalMemberships.map((membership) => {
-                const profile = profileMap.get(membership.user_id);
-                return (
-                  <div
-                    key={membership.id}
-                    className="rounded-lg border border-slate-200 bg-white p-3"
-                  >
-                    <p className="text-sm font-semibold text-slate-900">
-                      {apartmentDisplayMap.get(membership.apartment_id)?.displayText ??
-                        `Daire ${membership.apartments?.number ?? "-"}`}
+                            {invitation.status === "pending" ? (
+                              <form action={cancelInvitationAction} className="mt-3">
+                                <input type="hidden" name="invitationId" value={invitation.id} />
+                                <SubmitButton
+                                  pendingText="Iptal ediliyor..."
+                                  className="h-8 rounded-md border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                                >
+                                  Daveti Iptal Et
+                                </SubmitButton>
+                              </form>
+                            ) : null}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </article>
+
+                  <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <h2 className="text-base font-semibold text-slate-900">
+                      Kiraci / Oturum Gecmisi
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {historicalMemberships.length} gecmis kayit
                     </p>
-                    <p className="mt-1 break-words text-sm text-slate-700">
-                      {profile?.full_name || "Isimsiz"} - {profile?.email || "-"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600">
-                      {occupantTypeLabel(membership.occupant_type)} |{" "}
-                      {formatDate(membership.started_at)} -{" "}
-                      {membership.ended_at ? formatDate(membership.ended_at) : "-"}
-                    </p>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </article>
+                    <div className="mt-4 space-y-3">
+                      {historicalMemberships.length === 0 ? (
+                        <p className="rounded-lg border border-slate-200 bg-white px-3 py-6 text-center text-sm text-slate-600">
+                          Gecmis kayit yok.
+                        </p>
+                      ) : (
+                        historicalMemberships.map((membership) => {
+                          const profile = profileMap.get(membership.user_id);
+                          return (
+                            <div
+                              key={membership.id}
+                              className="rounded-lg border border-slate-200 bg-white p-3"
+                            >
+                              <p className="text-sm font-semibold text-slate-900">
+                                {apartmentDisplayMap.get(membership.apartment_id)?.displayText ??
+                                  `Daire ${membership.apartments?.number ?? "-"}`}
+                              </p>
+                              <p className="mt-1 break-words text-sm text-slate-700">
+                                {profile?.full_name || "Isimsiz"} - {profile?.email || "-"}
+                              </p>
+                              <p className="mt-1 text-xs text-slate-600">
+                                {occupantTypeLabel(membership.occupant_type)} |{" "}
+                                {formatDate(membership.started_at)} -{" "}
+                                {membership.ended_at ? formatDate(membership.ended_at) : "-"}
+                              </p>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </article>
+                </div>
+              ),
+            },
+          ]}
+        />
       </div>
     </section>
   );

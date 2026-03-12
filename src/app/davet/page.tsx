@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { SubmitButton } from "@/components/submit-button";
 import { createClient } from "@/lib/supabase/server";
@@ -34,19 +35,37 @@ export default async function InvitationPage({
   const invitationId = params.invitation_id;
   const error = params.error;
   const success = params.success;
+  const supabase = await createClient();
 
   if (!invitationId) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user?.email) {
+      const { data: pendingInvite } = await supabase
+        .from("apartment_invitations")
+        .select("id")
+        .eq("email", user.email.toLowerCase())
+        .eq("status", "pending")
+        .order("invited_at", { ascending: false })
+        .maybeSingle<{ id: string }>();
+
+      if (pendingInvite?.id) {
+        redirect(`/davet?invitation_id=${pendingInvite.id}`);
+      }
+    }
+
     return (
       <main className="mx-auto mt-6 max-w-xl rounded-2xl border border-slate-200 bg-white p-4 sm:mt-16 sm:p-6">
         <h1 className="text-xl font-semibold text-slate-900">Davet Bulunamadi</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Link gecersiz veya eksik. Yoneticiye yeni davet gondermesi icin bilgi verin.
+          Bu hesap icin aktif davet bulunamadi. Yoneticiye yeni davet gondermesi icin bilgi verin.
         </p>
       </main>
     );
   }
 
-  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -81,9 +100,40 @@ export default async function InvitationPage({
         <p className="mt-2 text-sm text-slate-600">
           Bu davet sizin hesabinizla eslesmiyor veya kullanilmis olabilir.
         </p>
+        <Link
+          href="/panel"
+          className="mt-4 inline-flex h-10 items-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white"
+        >
+          Panele Git
+        </Link>
       </main>
     );
   }
+
+  const emailMismatch =
+    user.email?.toLowerCase() !== invitation.email.toLowerCase();
+
+  if (emailMismatch) {
+    return (
+      <main className="mx-auto mt-6 max-w-xl rounded-2xl border border-slate-200 bg-white p-4 sm:mt-16 sm:p-6">
+        <h1 className="text-xl font-semibold text-slate-900">E-posta Eslesmedi</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          Bu davet <span className="font-semibold">{invitation.email}</span> adresine
+          gonderilmis, ancak su anda{" "}
+          <span className="font-semibold">{user.email}</span> olarak giris yapilmis.
+          Lutfen davet gonderilen e-posta ile giris yapin.
+        </p>
+        <Link
+          href="/giris"
+          className="mt-4 inline-flex h-10 items-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white"
+        >
+          Baska Hesap ile Giris Yap
+        </Link>
+      </main>
+    );
+  }
+
+  const isPending = invitation.status === "pending";
 
   return (
     <main className="mx-auto mt-6 max-w-xl rounded-2xl border border-slate-200 bg-white p-4 sm:mt-16 sm:p-6">
@@ -111,7 +161,15 @@ export default async function InvitationPage({
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <dt>Durum</dt>
-          <dd className="font-medium text-slate-900">{invitation.status}</dd>
+          <dd className="font-medium text-slate-900">
+            {invitation.status === "pending"
+              ? "Bekliyor"
+              : invitation.status === "accepted"
+                ? "Kabul Edildi"
+                : invitation.status === "cancelled"
+                  ? "Iptal Edildi"
+                  : "Basarisiz"}
+          </dd>
         </div>
       </dl>
 
@@ -127,42 +185,56 @@ export default async function InvitationPage({
         </p>
       ) : null}
 
-      <form action={setInvitationPasswordAction} className="mt-5 space-y-2">
-        <input type="hidden" name="invitationId" value={invitation.id} />
-        <label className="block space-y-1 text-sm">
-          <span className="font-medium text-slate-700">
-            Bu hesap icin sifre belirle (onerilen)
-          </span>
-          <input
-            required
-            minLength={6}
-            type="password"
-            name="password"
-            placeholder="En az 6 karakter"
-            className="h-10 w-full rounded-lg border border-slate-300 px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-          />
-        </label>
-        <SubmitButton
-          pendingText="Kaydediliyor..."
-          className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-        >
-          Sifreyi Kaydet
-        </SubmitButton>
-      </form>
+      {isPending ? (
+        <>
+          <form action={setInvitationPasswordAction} className="mt-5 space-y-2">
+            <input type="hidden" name="invitationId" value={invitation.id} />
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium text-slate-700">
+                Bu hesap icin sifre belirle (onerilen)
+              </span>
+              <input
+                required
+                minLength={6}
+                type="password"
+                name="password"
+                placeholder="En az 6 karakter"
+                className="h-10 w-full rounded-lg border border-slate-300 px-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+              />
+            </label>
+            <SubmitButton
+              pendingText="Kaydediliyor..."
+              className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              Sifreyi Kaydet
+            </SubmitButton>
+          </form>
 
-      {invitation.status === "pending" ? (
-        <form action={acceptInvitationAction} className="mt-5">
-          <input type="hidden" name="invitationId" value={invitation.id} />
-          <SubmitButton
-            pendingText="Davet kabul ediliyor..."
-            className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
+          <form action={acceptInvitationAction} className="mt-5">
+            <input type="hidden" name="invitationId" value={invitation.id} />
+            <SubmitButton
+              pendingText="Davet kabul ediliyor..."
+              className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
+            >
+              Daveti Kabul Et
+            </SubmitButton>
+          </form>
+        </>
+      ) : invitation.status === "accepted" ? (
+        <div className="mt-5 space-y-3">
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            Bu davet kabul edilmis. Panele giderek daire bilgilerinizi gorebilirsiniz.
+          </p>
+          <Link
+            href="/panel"
+            className="inline-flex h-10 items-center rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-700"
           >
-            Daveti Kabul Et
-          </SubmitButton>
-        </form>
+            Panele Git
+          </Link>
+        </div>
       ) : (
         <p className="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Bu davet artik aktif degil.
+          Bu davet artik aktif degil. Yonetici ile iletisime gecin.
         </p>
       )}
     </main>

@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 type Role = "admin" | "apt_manager" | "resident";
 type OccupantType = "owner" | "tenant";
+type InvitationStatus = "pending" | "accepted" | "cancelled" | "failed";
 
 async function assertManager() {
   const supabase = await createClient();
@@ -132,6 +133,42 @@ export async function inviteResidentAction(formData: FormData) {
     });
 
   if (inviteError) {
+    const alreadyRegistered = inviteError.message
+      .toLowerCase()
+      .includes("already been registered");
+
+    if (alreadyRegistered) {
+      const { error: otpError } = await adminClient.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: redirectTo,
+          data: {
+            invitation_id: invitation.id,
+          },
+        },
+      });
+
+      if (otpError) {
+        await supabase
+          .from("apartment_invitations")
+          .update({
+            status: "failed",
+            note: `${note ? `${note} - ` : ""}${otpError.message}`,
+          })
+          .eq("id", invitation.id);
+
+        redirect(
+          `/panel/kullanicilar?error=${encodeURIComponent(`Davet maili gonderilemedi: ${otpError.message}`)}`,
+        );
+      }
+
+      revalidatePages();
+      redirect(
+        "/panel/kullanicilar?success=Bu%20e-posta%20zaten%20kayitli.%20Davet%20icin%20giris%20baglantisi%20gonderildi.",
+      );
+    }
+
     await supabase
       .from("apartment_invitations")
       .update({
@@ -187,9 +224,19 @@ export async function cancelInvitationAction(formData: FormData) {
     redirect("/panel/kullanicilar?error=Gecersiz%20davet%20kaydi.");
   }
 
+  const { data: invitation } = await supabase
+    .from("apartment_invitations")
+    .select("id, status")
+    .eq("id", invitationId)
+    .maybeSingle<{ id: string; status: InvitationStatus }>();
+
+  if (!invitation || invitation.status !== "pending") {
+    redirect("/panel/kullanicilar?error=Yalnizca%20bekleyen%20davetler%20silinebilir.");
+  }
+
   const { error } = await supabase
     .from("apartment_invitations")
-    .update({ status: "cancelled" })
+    .delete()
     .eq("id", invitationId)
     .eq("status", "pending");
 
@@ -198,7 +245,7 @@ export async function cancelInvitationAction(formData: FormData) {
   }
 
   revalidatePages();
-  redirect("/panel/kullanicilar?success=Davet%20iptal%20edildi.");
+  redirect("/panel/kullanicilar?success=Davet%20silindi.");
 }
 
 export async function setUserActiveAction(formData: FormData) {

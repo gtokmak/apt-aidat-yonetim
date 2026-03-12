@@ -20,6 +20,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-body), sans-serif;
   overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 h1,
@@ -33,6 +34,7 @@ h6 {
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 input,
@@ -41,4 +43,34 @@ button,
 textarea {
   font: inherit;
   max-width: 100%;
+}
+
+/* Smooth scrolling but respect motion preferences */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Better touch targets on mobile */
+@media (max-width: 767px) {
+  select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="month"] {
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+}
+
+/* Hide scrollbar for horizontal nav */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

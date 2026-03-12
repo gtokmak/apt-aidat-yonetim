@@ -21,6 +21,22 @@ export async function acceptInvitationAction(formData: FormData) {
     redirect("/giris?error=Davet%20kabul%20icin%20giris%20yapiniz.");
   }
 
+  // Verify the invitation belongs to this user's email
+  const { data: invitation } = await supabase
+    .from("apartment_invitations")
+    .select("email")
+    .eq("id", invitationId)
+    .eq("status", "pending")
+    .maybeSingle<{ email: string }>();
+
+  if (!invitation) {
+    redirect(`/davet?invitation_id=${invitationId}&error=${encodeURIComponent("Davet bulunamadi veya artik aktif degil.")}`);
+  }
+
+  if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+    redirect(`/davet?invitation_id=${invitationId}&error=${encodeURIComponent("Bu davet baska bir e-posta adresine gonderilmis.")}`);
+  }
+
   const { error } = await supabase.rpc("accept_apartment_invitation", {
     p_invitation_id: invitationId,
   });
