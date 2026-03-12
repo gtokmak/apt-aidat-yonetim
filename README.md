@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Apartman Gelir Gider Uygulamasi
 
-## Getting Started
+Bu proje, 7 dairelik apartmanlar icin gelir gider ve aidat takibini yapan bir
+`Next.js + Supabase` uygulamasidir.
 
-First, run the development server:
+## Ozellikler
+
+- Yonetici ve daire kullanicisi rolleri
+- E-posta daveti ile kullanici onboarding (genel kayit kapali)
+- Kiraci devir takibi (giris/cikis tarihli gecmis)
+- Daire bazli yetki kontrolu (RLS, aktif oturum bazli)
+- Aylik aidat donemi olusturma
+- Toplu/yillik odeme kaydetme
+- Ekstra daire basi gider dagitimi (bahce duzenlemesi vb.)
+- Gider kategorisinden secim + yeni kategori ekleme
+- Kategori / odeme / gider kayitlarinda duzenle-sil islemleri
+- Aylik gelir gider defteri ve kasa ozeti
+- Defterde ay secimi ile gecmis donem goruntuleme
+- Daire bazli bakiye takibi (borc / on odeme)
+- Kullanici profil sayfasi (isim, telefon, sifre guncelleme)
+- Admin tarafinda kullanici aktif/pasif yonetimi
+- Resident kullanici icin de genel durum ve aylik defterde tum apartman gorunumu
+
+## Kurulum
+
+1. Bagimliliklari kur:
+
+```bash
+npm install
+```
+
+2. Ortam degiskenlerini ayarla:
+
+```bash
+cp .env.example .env.local
+```
+
+`.env.local` icine su degiskenleri koy:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_APP_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` (yalnizca server tarafinda kullanilir, davet maili icin gerekir)
+
+3. Supabase SQL'ini calistir:
+
+- Dosyalari sirasiyla calistir:
+- `supabase/migrations/20260311233000_init.sql`
+- `supabase/migrations/20260312002000_profiles_fallback.sql`
+- `supabase/migrations/20260312010000_invites_turnover_categories.sql`
+- `supabase/migrations/20260312020000_profiles_status_and_phone.sql`
+- `supabase/migrations/20260312110000_resident_full_read.sql`
+
+Bu migration'lar:
+- Temel tablolari ve RLS politikalari kurar
+- Profil eksiklerini backfill eder
+- Davet, kiraci devir ve kategori yapisini ekler
+- 1-7 daireyi otomatik olusturur
+
+4. Gelistirme ortamini baslat:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayicida [http://localhost:3000](http://localhost:3000) adresini ac.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Kullanim Akisi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Ilk kayit olan hesap yonetici olur.
+2. Yonetici `Kullanicilar` sayfasindan daireye e-posta daveti gonderir.
+3. Davet alan kullanici linkten kabul ederek daireye otomatik baglanir.
+4. Kiraci cikinca kayit kapatilir, yeni kiraci icin yeni davet acilir.
+5. Yonetici panelinden aidat, odeme, gider, kategori ve ek giderleri yonetir.
 
-## Learn More
+## Ucretsiz Yayin
 
-To learn more about Next.js, take a look at the following resources:
+- Frontend: Vercel Free
+- Backend: Supabase Free
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Vercel ortam degiskenlerine asagidakileri ekle:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_APP_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Giris Sorunu Notu
 
-## Deploy on Vercel
+Kayit sonrasi giris olmuyorsa iki noktayi kontrol edin:
+- Supabase Auth > Email ayarinda kullanici e-posta dogrulamasini tamamlamis olmali.
+- SQL migration dosyalarinin tamami calismis olmali.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ozellikle profile eksigi yasandiysa su migration'i da calistirin:
+- `supabase/migrations/20260312002000_profiles_fallback.sql`
