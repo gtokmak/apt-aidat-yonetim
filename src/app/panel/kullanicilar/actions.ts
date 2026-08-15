@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -64,6 +64,26 @@ function getAppUrl() {
   return "http://localhost:3000";
 }
 
+function createInvitationMailClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !supabasePublishableKey) {
+    throw new Error("Supabase baglanti bilgileri eksik.");
+  }
+
+  // The recipient may open the email on another device, so this flow must not
+  // depend on the manager's PKCE cookies or alter the manager's session.
+  return createSupabaseClient(supabaseUrl, supabasePublishableKey, {
+    auth: {
+      flowType: "implicit",
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
 export async function inviteResidentAction(formData: FormData) {
   const { supabase, userId } = await assertManager();
 
@@ -102,91 +122,31 @@ export async function inviteResidentAction(formData: FormData) {
     redirect(`/panel/kullanicilar?error=${encodeURIComponent(invitationError?.message ?? "Davet kaydi olusturulamadi.")}`);
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const appUrl = getAppUrl();
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    await supabase
-      .from("apartment_invitations")
-      .update({
-        status: "failed",
-        note: `${note ? `${note} - ` : ""}SERVICE_ROLE eksik.`,
-      })
-      .eq("id", invitation.id);
-
-    redirect(
-      "/panel/kullanicilar?error=SUPABASE_SERVICE_ROLE_KEY%20eksik.%20Davet%20maili%20gonderilemedi.",
-    );
-  }
-
-  const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
   const nextPath = `/davet?invitation_id=${invitation.id}`;
   const redirectTo = `${appUrl}/auth/confirm?next=${encodeURIComponent(nextPath)}`;
+  const invitationMailClient = createInvitationMailClient();
 
-  const { data: inviteData, error: inviteError } =
-    await adminClient.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: {
-        invitation_id: invitation.id,
-      },
-    });
+  const { error: otpError } = await invitationMailClient.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: redirectTo,
+      shouldCreateUser: true,
+    },
+  });
 
-  if (inviteError) {
-    const alreadyRegistered = inviteError.message
-      .toLowerCase()
-      .includes("already been registered");
-
-    if (alreadyRegistered) {
-      const { error: otpError } = await adminClient.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: redirectTo,
-          data: {
-            invitation_id: invitation.id,
-          },
-        },
-      });
-
-      if (otpError) {
-        await supabase
-          .from("apartment_invitations")
-          .update({
-            status: "failed",
-            note: `${note ? `${note} - ` : ""}${otpError.message}`,
-          })
-          .eq("id", invitation.id);
-
-        redirect(
-          `/panel/kullanicilar?error=${encodeURIComponent(`Davet maili gonderilemedi: ${otpError.message}`)}`,
-        );
-      }
-
-      revalidatePages();
-      redirect(
-        "/panel/kullanicilar?success=Bu%20e-posta%20zaten%20kayitli.%20Davet%20icin%20giris%20baglantisi%20gonderildi.",
-      );
-    }
-
+  if (otpError) {
     await supabase
       .from("apartment_invitations")
       .update({
         status: "failed",
-        note: `${note ? `${note} - ` : ""}${inviteError.message}`,
+        note: `${note ? `${note} - ` : ""}${otpError.message}`,
       })
       .eq("id", invitation.id);
 
     redirect(
-      `/panel/kullanicilar?error=${encodeURIComponent(`Davet maili gonderilemedi: ${inviteError.message}`)}`,
+      `/panel/kullanicilar?error=${encodeURIComponent(`Davet maili gonderilemedi: ${otpError.message}`)}`,
     );
-  }
-
-  if (inviteData.user?.id) {
-    await supabase
-      .from("apartment_invitations")
-      .update({ invited_user_id: inviteData.user.id })
-      .eq("id", invitation.id);
   }
 
   revalidatePages();

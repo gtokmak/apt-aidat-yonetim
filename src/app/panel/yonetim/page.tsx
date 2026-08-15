@@ -4,7 +4,6 @@ import { requireManager } from "@/lib/auth";
 import { enrichApartmentsWithResidents } from "@/lib/apartments";
 import { SubmitButton } from "@/components/submit-button";
 import { SectionTabs } from "@/components/section-tabs";
-import { ExpandableRecordList } from "@/components/expandable-record-list";
 import { PeriodFilteredRecordList } from "@/components/period-filtered-record-list";
 import { formatDate, formatMoney, monthLabel } from "@/lib/utils";
 
